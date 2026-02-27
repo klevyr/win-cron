@@ -410,7 +410,7 @@ class Radagast:
         ___future___
         Devuelve una conexion a MYSQL
         """
-        url = f"mysql+mysqlconnector://{self.mysql_user}:{self.mysql_passwd}@{self.mysql_host}/{self.mysql_db}"
+        url = f"mysql+pymysql://{self.mysql_user}:{self.mysql_passwd}@{self.mysql_host}/{self.mysql_db}"
         return sqa.create_engine(url)
 
     def runSqlQuery(self, sqlscript):
