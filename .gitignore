@@ -1,0 +1,7 @@
+__pycache__
+
+*.log
+*.jar
+*.bin
+*.ini
+.env
