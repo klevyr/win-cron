@@ -1,0 +1,23 @@
+# WINCRON GH/micromys/winCron
+# usage:
+# *    *    *   *    *  Command_to_execute
+# :    :    :    :   :       
+# :    :    :    :    Day of the Week ( 0 - 6 ) ( Monday = 0 )
+# :    :    :    Month ( 1 - 12 )
+# :    :    Day of Month ( 1 - 31 )
+# :    Hour ( 0 - 23 )
+# Min ( 0 - 59 )
+
+
+# LOGS NOTIFICACIONES
+
+## OTRAS FUENTES (EMAIL/SMS, CNACLIP, CNAPUAP, PAYCLUB)
+#45 8 * * 0-4 py D:/bin/cron/cmd/daily-notifications.py
+#*/30 10-14 * * 0-4 py D:/bin/cron/cmd/hourly-notifications.py
+#*/2 1 * * 0-4 start /MIN py D:/bin/cron/cmd/hourly-notifications.py
+
+## Monitoreo
+47 8 * * 0-4 py D:/bin/cron/cmd/daily-agr-notifications.py
+*/30 10-14 * * 0-4 py D:/bin/cron/cmd/hourly-agr-notifications.py
+#*/2 1 * * 0-4 start /MIN py D:/bin/cron/cmd/hourly-notifications.py
+
