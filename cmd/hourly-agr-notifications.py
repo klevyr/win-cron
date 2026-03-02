@@ -9,8 +9,12 @@ if __name__ == '__main__':
     rad.set_logger(__file__ + ".log")
     rad.log.info("***** NEW *****")
     dt = date.today().strftime("%Y%m%d")
-    rad.log.info("* prepare transfers")
-    rad.log.info(" now[" + dt + "]")
+    rad.log.info("* config transfers")
+    rad.log.info(f" >> now `{dt}`")
+    # init transfers
+    rad.load_config()
+    rad.log.info("* init transfer config")
+    rad.acsbundle_init()
     # prepare transfers
     rad.set_config_transfer(
         filetransfer="EMAIL_AGR_NOTIF.dtfx",
@@ -18,21 +22,17 @@ if __name__ == '__main__':
         configkey="Where",
         configvalue=f"E1Z141Q2 = '{dt}'"
     )
+    rad.acsbundle_download()
     rad.set_config_transfer(
         filetransfer="SMS_AGR_NOTIF.dtfx",
         configsection="SQL",
         configkey="Where",
         configvalue=f"S1Z141Q2 = '{dt}'"
     )
-    # init transfers
-    rad.load_config()
-    rad.log.info("* init transfer")
-    ## Notifications
-    #rad.transfer_data("SMS_NOTIF")
-    #rad.transfer_data("EMAIL_NOTIF")
+    rad.acsbundle_download()
     ## Otros Payclub, cna
-    rad.transfer_data("CNAPUAP_DAILY")
-    rad.transfer_data("CNACLIP_DAILY")
+    #rad.transfer_data("CNAPUAP_DAILY")
+    #rad.transfer_data("CNACLIP_DAILY")
     rad.log.info("* init SQL")
     #rad.run_mysql("hourly_notifications.sql")
     #rad.run_mysql("hourly_othersdb.sql")
