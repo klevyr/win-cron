@@ -203,7 +203,7 @@ class Radagast:
         parametros especificados
         """
         config = configparser.ConfigParser()
-        config.optionxform = str
+        config.optionxform = str # type: ignore
         tfile = self.transferfolder + filetransfer
         config.read(tfile)
         cfgfile = open(tfile, 'w')
