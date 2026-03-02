@@ -35,6 +35,7 @@ class Radagast:
         self.log = logging.getLogger()
         self.lockfile = ""
         self.transferfolder = f"{self.maindir}/cmd/transfer/"
+        self.currenttransferfile = ""
         self.configfil = f"{self.maindir}/config.ini"
         self.logpath = f"{self.maindir}/cmd/logs/"
         atexit.register(self.cleanup)
@@ -202,13 +203,15 @@ class Radagast:
         parametros especificados
         """
         config = configparser.ConfigParser()
-        # config.optionxform = str
+        config.optionxform = str
         tfile = self.transferfolder + filetransfer
         config.read(tfile)
         cfgfile = open(tfile, 'w')
         self.log.info("Update trans. file '%s'" % tfile)
         config.set(configsection, configkey, configvalue)
         config.write(cfgfile, False)
+        # fix check if save successfully 
+        self.currenttransferfile = tfile
         self.log.info("Change section %s[%s]:%s" %
                       (configsection, configkey, configvalue)
                       )
@@ -254,12 +257,12 @@ class Radagast:
         Inicializa la nueva version de transferencia utilizando el programa `acsbundle.jar`
         para realizar las tranferencias del gestor.
         """
-        proc = Popen(["java", "-jar", "acsbundle.jar", "/plugin=logon", "/system=AS400F35",
-                      f"/userid={self.us_transfer}", f"/password={self.pw_transfer}",
-                      "/gui=0"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        proc = Popen(["java", "-jar", f"{self.maindir}/cmd/acsbundle.jar", "/plugin=logon", "/system=AS400F35",
+                    f"/userid={self.us_transfer}", f"/password={self.pw_transfer}",
+                    "/gui=0"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, err = proc.communicate()
         if err:
-            self.log.error(err)
+            self.log.error(f"{err.decode('utf-8')} in {os.path.realpath(__file__)}")
         for line in output.decode('ISO8859-1').split('\r\n'):
             self.log.info(line)
 
@@ -267,40 +270,32 @@ class Radagast:
         """
         Realiza la carga de archivos al as400.
         """
-        proc = Popen(["java", "-jar", "acsbundle.jar", "/plugin=upload",
-                      "SMSBAT.dttx", f"/userid={self.us_transfer}"],
+        proc = Popen(["java", "-jar", f"{self.maindir}/cmd/acsbundle.jar", "/plugin=upload",
+                      self.currenttransferfile, f"/userid={self.us_transfer}"],
                       stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, err = proc.communicate()
         if err:
             self.log.error(err)
         for line in output.decode('ISO8859-1').split('\n'):
             if line.strip()[:6].upper() == "FILAS ":
-                print("")
-                rows = line.strip().replace("      ", " ")
-                print("    " + rows)
-                input("    Presione ENTER para finalizar.")
-                self.log.info(rows)
-                #self.meta.append(rows.split(':')[1].strip())
+                rows = line.strip().split(':')[1].strip()
+                self.log.info(f"> rows {rows} uploaded")
+
 
     def acsbundle_download(self):
         """
         Realiza la descarga de archivos del as400.
         """
-        proc = Popen(["java", "-jar", "acsbundle.jar", "/plugin=download",
-                      "/system=AS400F35", "", f"/userid={self.us_transfer}"],
+        proc = Popen(["java", "-jar", f"{self.maindir}/cmd/acsbundle.jar", "/plugin=download",
+                      "/system=AS400F35", f"/userid={self.us_transfer}", self.currenttransferfile],
                       stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, err = proc.communicate()
         if err:
             self.log.error(err)
         for line in output.decode('ISO8859-1').split('\n'):
             if line.strip()[:6].upper() == "FILAS ":
-                print("")
-                rows = line.strip().replace("      ", " ")
-                print("    " + rows)
-                input("    Presione ENTER para finalizar.")
-                self.log.info(rows)
-                #self.meta.append(rows.split(':')[1].strip())
-    
+                rows = line.strip().split(':')[1].strip()
+                self.log.info(f"> rows {rows} downloaded")
 
 
     def clean_transfer_data(self, filelist, clean_mode='truncate'):
