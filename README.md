@@ -32,6 +32,11 @@ python CrontabService.py remove
 
 **IMPORTANTE!** Las tareas programadas tendran los mismos permisos, debe asegurarse de que la configuracion del servicio se encuentre limitado.
 
+## Requisitos
+
+* NEW `acsbundle.jar` Controlador para la transferencia de archivos.
+
+
 ## Creditos
 
 **winCron**, https://github.com/micromys/winCron
