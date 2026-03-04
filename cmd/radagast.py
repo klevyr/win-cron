@@ -22,7 +22,7 @@ class Radagast:
         root = ""
         if sys.platform == 'win32':
             root = str(__file__)[:2]
-        self.maindir = f"{root}/bin/cron"
+        self.maindir = f"{root}/bin/cron" # fixme: import from config.json
         self.us_transfer = ""
         self.pw_transfer = ""
         self.pw_windows = ""
@@ -34,10 +34,11 @@ class Radagast:
         self.senderAccount = ""
         self.log = logging.getLogger()
         self.lockfile = ""
-        self.transferfolder = f"{self.maindir}/cmd/transfer/"
+        self.transferfolder = f"{self.maindir}/cmd/transfer/" # fixme: import from config.json
         self.currentTransferFile = ""
-        self.configfil = f"{self.maindir}/config.ini"
-        self.logpath = f"{self.maindir}/cmd/logs/"
+        self.configfil = f"{self.maindir}/config.ini" # fixme: import from config.json
+        self.logpath = f"{self.maindir}/cmd/logs/" # fixme: import from config.json
+        self.defaultOutputData = "D:/com/share" # fixme: import from config.json
         atexit.register(self.cleanup)
 
     def getDateRange_LastMonth(self):
@@ -206,8 +207,8 @@ class Radagast:
         config.optionxform = str # type: ignore
         self.set_current_transfer_filename(filetransfer)
         config.read(self.currentTransferFile)
-        self.log.info("Change `%s` in section %s[%s]:%s" %
-                      (filetransfer, configsection, configkey, configvalue)
+        self.log.info("Change in section %s[%s]:%s" %
+                      (configsection, configkey, configvalue)
                       )
         config.set(configsection, configkey, configvalue)
         with open(self.currentTransferFile, 'w') as cfgfile:
@@ -218,6 +219,7 @@ class Radagast:
         Lee los archivos de transferencis AS400 y modifica los
         parametros especificados
         """
+        self.log.info("> Init transfer file: `%s`" % (filetransfer))
         self.currentTransferFile = self.transferfolder + filetransfer
         return self
 
@@ -283,7 +285,7 @@ class Radagast:
         for line in output.decode('ISO8859-1').split('\n'):
             if line.strip()[:6].upper() == "FILAS ":
                 rows = line.strip().split(':')[1].strip()
-                self.log.info(f"> rows {rows} uploaded")
+                self.log.info(f"> {rows} rows uploaded")
 
 
     def acsbundle_download(self):
@@ -299,7 +301,7 @@ class Radagast:
         for line in output.decode('ISO8859-1').split('\n'):
             if line.strip()[:6].upper() == "FILAS ":
                 rows = line.strip().split(':')[1].strip()
-                self.log.info(f"> rows {rows} downloaded")
+                self.log.info(f"> {rows} rows downloaded")
 
 
     def clean_transfer_data(self, filelist, clean_mode='truncate'):
