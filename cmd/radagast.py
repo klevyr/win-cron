@@ -35,7 +35,7 @@ class Radagast:
         self.log = logging.getLogger()
         self.lockfile = ""
         self.transferfolder = f"{self.maindir}/cmd/transfer/"
-        self.currenttransferfile = ""
+        self.currentTransferFile = ""
         self.configfil = f"{self.maindir}/config.ini"
         self.logpath = f"{self.maindir}/cmd/logs/"
         atexit.register(self.cleanup)
@@ -204,18 +204,22 @@ class Radagast:
         """
         config = configparser.ConfigParser()
         config.optionxform = str # type: ignore
-        tfile = self.transferfolder + filetransfer
-        config.read(tfile)
-        cfgfile = open(tfile, 'w')
-        self.log.info("Update trans. file '%s'" % tfile)
-        config.set(configsection, configkey, configvalue)
-        config.write(cfgfile, False)
-        # fix check if save successfully 
-        self.currenttransferfile = tfile
-        self.log.info("Change section %s[%s]:%s" %
-                      (configsection, configkey, configvalue)
+        self.set_current_transfer_filename(filetransfer)
+        config.read(self.currentTransferFile)
+        self.log.info("Change `%s` in section %s[%s]:%s" %
+                      (filetransfer, configsection, configkey, configvalue)
                       )
-        cfgfile.close()
+        config.set(configsection, configkey, configvalue)
+        with open(self.currentTransferFile, 'w') as cfgfile:
+            config.write(cfgfile, False)
+
+    def set_current_transfer_filename(self, filetransfer):
+        """
+        Lee los archivos de transferencis AS400 y modifica los
+        parametros especificados
+        """
+        self.currentTransferFile = self.transferfolder + filetransfer
+        return self
 
     def transfer_data(self, filename):
         """
@@ -271,7 +275,7 @@ class Radagast:
         Realiza la carga de archivos al as400.
         """
         proc = Popen(["java", "-jar", f"{self.maindir}/cmd/acsbundle.jar", "/plugin=upload",
-                      self.currenttransferfile, f"/userid={self.us_transfer}"],
+                      self.currentTransferFile, f"/userid={self.us_transfer}"],
                       stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, err = proc.communicate()
         if err:
@@ -287,7 +291,7 @@ class Radagast:
         Realiza la descarga de archivos del as400.
         """
         proc = Popen(["java", "-jar", f"{self.maindir}/cmd/acsbundle.jar", "/plugin=download",
-                      "/system=AS400F35", f"/userid={self.us_transfer}", self.currenttransferfile],
+                      "/system=AS400F35", f"/userid={self.us_transfer}", self.currentTransferFile],
                       stdin=PIPE, stdout=PIPE, stderr=PIPE)
         output, err = proc.communicate()
         if err:
