@@ -1,5 +1,7 @@
 __pycache__
 
+*.dtf
+*.dtfx
 *.log
 *.jar
 *.bin
