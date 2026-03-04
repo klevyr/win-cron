@@ -6,7 +6,7 @@ from datetime import datetime
 import pandas as pd
 
 transfer_columns = ['Fecha', 'MesID', 'DiaID', 'uid', 'Hora', 'Cola',
-                    'Response','StatusContact','Envios']
+                    'Response','StatusContact','TipoId','Envios']
 
 def getTextQueueType(col):
     if col == 'COLPUSHJOU':
