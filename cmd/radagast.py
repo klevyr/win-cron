@@ -89,13 +89,13 @@ class Radagast:
     def getIncrementalDateRangebyDate(self, max_date):
         """
         Devuelve el rango de fechas para base incrementales:
-        >>> getIncrementalDateRange(max_date=20226603)
+        >>> getIncrementalDateRange(max_date=20220603)
         today=20220605
-        ld_ = max_date+1 => 20226604
-        fd_ = today-1    => 20226604
+        ld_ = max_date+1 => 20220604
+        fd_ = today-1    => 20220604
         """
         ld_incremental = date.today() - timedelta(days=1)
-        fd_incremental = max_date     + timedelta(days=1)
+        fd_incremental = max_date if max_date.day == 1 else max_date  + timedelta(days=1)
         return fd_incremental, ld_incremental
 
     def set_logger(self, filelog):
