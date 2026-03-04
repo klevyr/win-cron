@@ -1,37 +1,32 @@
 [DataTransferFrom]
 DataTransferVersion=1.0
-
 [HostInfo]
 Database=*SYSBAS
-HostFile=DVMCOMUN/TMSMT13U
+HostFile=DVMCOMUN/CNACLIP
 HostName=AS400F35
-
 [ClientInfo]
 CrtOpt=1
 OutputDevice=2
 SaveFDF=0
 ClientFileType=12
-ClientFile=D:\com\share\sms_agr_notifications.csv
+ClientFile=D:\com\share\cnaclip-daily.csv
 TruncateTrailingSpaces=1
 PadNumericFields=0
-FileEncoding=UTF-8
-FDFFile=D:\com\share\sms_agr_notifications.fdfx
-
+FileEncoding=windows-1252
 [SQL]
 EnableGroup=0
-GroupBy=S1Z141Q2, LEFT(S1Z141Q2, 6), RIGHT(S1Z141Q2, 2), CONCAT(CONCAT(TM26A, TM27A), S1XX858), LEFT(S1XXDZE, 2), TRIM(S1XX84G), LENGTH(TRIM(S1XX84A)), CASE WHEN TRIM(S1XX84W) LIKE '593%' THEN 'Valid' ELSE 'Invalid' END
+GroupBy=
 Having=
 JoinBy=
 MissingFields=0
 OrderBy=
 SQLSelect=
-Select=S1Z141Q2 AS FECHA, LEFT(S1Z141Q2, 6) AS MESID, RIGHT(S1Z141Q2, 2) AS DIAID, CONCAT(CONCAT(TM26A, TM27A), S1XX858) AS UID, LEFT(S1XXDZE, 2) AS HORA, TRIM(S1XX84G) AS COLA, LENGTH(TRIM(S1XX84A)) AS RESPONSE, CASE WHEN TRIM(S1XX84W) LIKE '593%' THEN 'Valid' ELSE 'Invalid' END AS VALIDCONT, count(*) AS ENVIOS
-Where=S1Z141Q2 = '20260304'
-
+Select=CLDOCU, CLTIPP, CLTISE, CLFEVC, CLUSBI
+Where=CLTIPP IN ('PIN') AND CLUSBI <> ''
 [Options]
-DateFmt=YMD
+DateFmt=ISO
 DateSep=[/]
-DecimalSep=,
+DecimalSep=.
 IgnoreDecErr=1
 Lang=0
 LangID=
@@ -39,7 +34,6 @@ SortSeq=0
 SortTable=
 TimeFmt=HMS
 TimeSep=[:]
-
 [HTML]
 AutoSize=0
 AutoSizeKB=128
@@ -94,20 +88,20 @@ EnableNumberOfColumns=0
 EnableNumberOfRows=0
 EnableTableWidth=0
 IncludeColumnNames=1
-
 [Properties]
 AutoClose=0
 AutoRun=0
-Check4Untrans=1
-Convert65535=1
+Check4Untrans=0
+Convert65535=0
 Notify=1
 SQLStmt=0
-ShowWarnings=1
+ShowWarnings=0
 StoreDecFAsChar=1
 UseCompression=1
-UseSSL=2
-UserOption=0
+UseSSL=0
+UserOption=2
 DisplayLongSchemaNames=1
 DisplayLongTableNames=1
 DisplayLongColumnNames=1
-
+[LibraryList]
+Lib1=B DCDNSOCIOS
