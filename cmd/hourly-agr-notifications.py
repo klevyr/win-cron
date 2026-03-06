@@ -54,8 +54,9 @@ if __name__ == '__main__':
                      dtype=str
                      )
     df['TipoCola'] = df['Cola'].map(getTextQueueType)
-    rad.runSqlQuery(f"DELETE FROM `mon_notif_sms` WHERE Fecha = '{today_dtformat}'")
-    df.to_sql(name='mon_notif_sms', con=rad.getMSqlEngine(), if_exists='append', index=False)
+    df['Origen'] = 'LOG_SMS'
+    rad.runSqlQuery(f"DELETE FROM `mon_notif_email_sms` WHERE Fecha = '{today_dtformat}'")
+    df.to_sql(name='mon_notif_email_sms', con=rad.getMSqlEngine(), if_exists='append', index=False)
     rad.log.info("> SMS, done.")
     # EMAIL
     df = pd.read_csv(f"{rad.defaultOutputData}/mail_agr_notifications.csv",
@@ -64,8 +65,9 @@ if __name__ == '__main__':
                      dtype=str
                      )
     df['TipoCola'] = 'POSTFIX'
-    rad.runSqlQuery(f"DELETE FROM `mon_notif_email` WHERE Fecha = '{today_dtformat}'")
-    df.to_sql(name='mon_notif_email', con=rad.getMSqlEngine(), if_exists='append', index=False)
+    df['Origen'] = 'LOG_EMAIL'
+    rad.runSqlQuery(f"DELETE FROM `mon_notif_email_sms` WHERE Fecha = '{today_dtformat}'")
+    df.to_sql(name='mon_notif_email_sms', con=rad.getMSqlEngine(), if_exists='append', index=False)
     rad.log.info("> EMAIL, done.")
     # CNACLIP
     df = pd.read_csv(f"{rad.defaultOutputData}/cnaclip-daily.csv",

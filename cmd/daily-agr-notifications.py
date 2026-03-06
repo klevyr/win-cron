@@ -27,8 +27,9 @@ if __name__ == '__main__':
     # EMAIL NOTIFICATIONS
     lastUpdate = rad.runSqlQuery("""
                                  SELECT IFNULL(MAX(Fecha), CAST(DATE_FORMAT(NOW(),'%Y-%m-01') AS DATETIME)) maximo 
-                                 FROM mon_notif_email
+                                 FROM mon_notif_email_sms
                                  WHERE Fecha < DATE_FORMAT(NOW(), '%Y-%m-%d')
+                                 AND Origen = 'LOG_EMAIL'
                                  """)
     inidt, enddt = rad.getIncrementalDateRangebyDate(lastUpdate.maximo) # type: ignore
     inidate = inidt.strftime("%Y%m%d")
@@ -45,8 +46,9 @@ if __name__ == '__main__':
     rad.acsbundle_download()
     # SMS NOTIFICATIONS
     lastUpdate = rad.runSqlQuery("""SELECT IFNULL(MAX(Fecha), CAST(DATE_FORMAT(NOW(),'%Y-%m-01') AS DATETIME)) maximo 
-                                 FROM mon_notif_sms
+                                 FROM mon_notif_email_sms
                                  WHERE Fecha < DATE_FORMAT(NOW(), '%Y-%m-%d')
+                                 AND Origen = 'LOG_SMS'
                                  """)
     inidt, enddt = rad.getIncrementalDateRangebyDate(lastUpdate.maximo) # type: ignore
     inidate = inidt.strftime("%Y%m%d")
@@ -70,8 +72,9 @@ if __name__ == '__main__':
                      dtype=str
                      )
     df['TipoCola'] = df['Cola'].map(getTextQueueType)
-    rad.runSqlQuery(f"DELETE FROM `mon_notif_sms` WHERE Fecha BETWEEN '{sms_start}' AND '{sms_end}'")
-    df.to_sql(name='mon_notif_sms', con=rad.getMSqlEngine(), if_exists='append', index=False)
+    df['Origen'] = 'LOG_SMS'
+    rad.runSqlQuery(f"DELETE FROM `mon_notif_email_sms` WHERE Fecha BETWEEN '{sms_start}' AND '{sms_end}'")
+    df.to_sql(name='mon_notif_email_sms', con=rad.getMSqlEngine(), if_exists='append', index=False)
     rad.log.info("> SMS, done.")
     # EMAIL
     df = pd.read_csv(f"{rad.defaultOutputData}/mail_agr_notifications.csv",
@@ -80,8 +83,9 @@ if __name__ == '__main__':
                      dtype=str
                      )
     df['TipoCola'] = 'POSTFIX'
-    rad.runSqlQuery(f"DELETE FROM `mon_notif_email` WHERE Fecha BETWEEN '{mail_start}' AND '{mail_end}'")
-    df.to_sql(name='mon_notif_email', con=rad.getMSqlEngine(), if_exists='append', index=False)
+    df['Origen'] = 'LOG_EMAIL'
+    rad.runSqlQuery(f"DELETE FROM `mon_notif_email_sms` WHERE Fecha BETWEEN '{mail_start}' AND '{mail_end}'")
+    df.to_sql(name='mon_notif_email_sms', con=rad.getMSqlEngine(), if_exists='append', index=False)
     rad.log.info("> EMAIL, done.")
 
     files_remove = [
