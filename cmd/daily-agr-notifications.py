@@ -72,8 +72,9 @@ if __name__ == '__main__':
                      dtype=str
                      )
     df['TipoCola'] = df['Cola'].map(getTextQueueType)
-    df['Origen'] = 'LOG_SMS'
-    rad.runSqlQuery(f"DELETE FROM `mon_notif_email_sms` WHERE Fecha BETWEEN '{sms_start}' AND '{sms_end}'")
+    src_transfer = "LOG_SMS"
+    df['Origen'] = src_transfer
+    rad.runSqlQuery(f"DELETE FROM `mon_notif_email_sms` WHERE Fecha BETWEEN '{sms_start}' AND '{sms_end}' AND Origen = '{src_transfer}'")
     df.to_sql(name='mon_notif_email_sms', con=rad.getMSqlEngine(), if_exists='append', index=False)
     rad.log.info("> SMS, done.")
     # EMAIL
@@ -83,8 +84,9 @@ if __name__ == '__main__':
                      dtype=str
                      )
     df['TipoCola'] = 'POSTFIX'
-    df['Origen'] = 'LOG_EMAIL'
-    rad.runSqlQuery(f"DELETE FROM `mon_notif_email_sms` WHERE Fecha BETWEEN '{mail_start}' AND '{mail_end}'")
+    src_transfer = "LOG_EMAIL"
+    df['Origen'] = src_transfer
+    rad.runSqlQuery(f"DELETE FROM `mon_notif_email_sms` WHERE Fecha BETWEEN '{mail_start}' AND '{mail_end}' AND Origen = '{src_transfer}'")
     df.to_sql(name='mon_notif_email_sms', con=rad.getMSqlEngine(), if_exists='append', index=False)
     rad.log.info("> EMAIL, done.")
 

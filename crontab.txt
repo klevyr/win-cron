@@ -13,5 +13,5 @@
 # LOGS NOTIFICACIONES
 
 ## Monitoreo
-46 8 * * 0-4 /MIN py D:/bin/cron/cmd/daily-agr-notifications.py
-30 9-16 * * 0-4 /MIN py D:/bin/cron/cmd/hourly-agr-notifications.py
+46 8 * * 0-4 py D:/bin/cron/cmd/daily-agr-notifications.py
+30 9-16 * * 0-4 py D:/bin/cron/cmd/hourly-agr-notifications.py
