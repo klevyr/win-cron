@@ -41,7 +41,7 @@ if __name__ == '__main__':
         filetransfer="EMAIL_AGR_NOTIF.dtfx",
         configsection="SQL",
         configkey="Where",
-        configvalue=f"E1Z141Q2 >= '{inidate}' AND E1Z141Q2 <= '{enddate}'"
+        configvalue=f"TM45A IN ('T','E') AND E1Z141Q2 >= '{inidate}' AND E1Z141Q2 <= '{enddate}'"
     )
     rad.acsbundle_download()
     # SMS NOTIFICATIONS
@@ -60,7 +60,7 @@ if __name__ == '__main__':
         filetransfer="SMS_AGR_NOTIF.dtfx",
         configsection="SQL",
         configkey="Where",
-        configvalue=f"S1Z141Q2 >= '{inidate}' AND S1Z141Q2 <= '{enddate}'"
+        configvalue=f"TRIM(S1XX84W) NO INT ('0','0000000000') AND S1Z141Q2 >= '{inidate}' AND S1Z141Q2 <= '{enddate}'"
     )
     rad.acsbundle_download()
     # init uploads
