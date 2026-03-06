@@ -4,7 +4,7 @@
 import atexit, configparser, logging
 import os, sys, smtplib
 import sqlalchemy as sqa
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from subprocess import Popen, PIPE
@@ -94,8 +94,13 @@ class Radagast:
         ld_ = max_date+1 => 20220604
         fd_ = today-1    => 20220604
         """
+        if isinstance(max_date, datetime):
+            max_date = max_date.date()
         ld_incremental = date.today() - timedelta(days=1)
-        fd_incremental = max_date if max_date.day == 1 else max_date  + timedelta(days=1)
+        if (max_date + timedelta(days=1)) > ld_incremental:
+            fd_incremental = ld_incremental
+        else:
+            fd_incremental = max_date if max_date.day == 1 else max_date + timedelta(days=1)
         return fd_incremental, ld_incremental
 
     def set_logger(self, filelog):
