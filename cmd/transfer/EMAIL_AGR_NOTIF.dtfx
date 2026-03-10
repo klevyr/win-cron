@@ -1,11 +1,9 @@
 [DataTransferFrom]
 DataTransferVersion=1.0
-
 [HostInfo]
 Database=*SYSBAS
 HostFile=DVMCOMUN/TMSMT34U
 HostName=AS400F35
-
 [ClientInfo]
 CrtOpt=1
 OutputDevice=2
@@ -16,7 +14,6 @@ TruncateTrailingSpaces=1
 PadNumericFields=0
 FileEncoding=windows-1252
 FDFFile=D:\com\share\mail_agr_notifications.fdfx
-
 [SQL]
 EnableGroup=0
 GroupBy=E1Z141Q2, LEFT(E1Z141Q2, 6), RIGHT(E1Z141Q2, 2), CONCAT(CONCAT(TM26A, TM27A), E1XX858), LEFT(E1XXDZE, 2), TRIM(E1XX84G), CASE WHEN TM45A IN ('T','E') THEN '16' ELSE '0' END, CASE WHEN LENGTH(TRIM(E1XX84W)) > 8 THEN 'Valid' ELSE 'Invalid' END, CASE WHEN LENGTH(TRIM(E1XX84Y)) = 13 AND RIGHT(TRIM(E1XX84Y), 3) = '001' THEN 'RUC' ELSE 'CID' END
@@ -26,8 +23,7 @@ MissingFields=0
 OrderBy=
 SQLSelect=
 Select=E1Z141Q2 AS FECHA, LEFT(E1Z141Q2, 6) AS MESID, RIGHT(E1Z141Q2, 2) AS DIAID, CONCAT(CONCAT(TM26A, TM27A), E1XX858) AS UID, LEFT(E1XXDZE, 2) AS HORA, TRIM(E1XX84G) AS COLA, CASE WHEN TM45A IN ('T','E') THEN '16' ELSE '0' END AS RESPONSE, CASE WHEN LENGTH(TRIM(E1XX84W)) > 8 THEN 'Valid' ELSE 'Invalid' END AS VALIDCONT, CASE WHEN LENGTH(TRIM(E1XX84Y)) = 13 AND RIGHT(TRIM(E1XX84Y), 3) = '001' THEN 'RUC' ELSE 'CID' END AS TIPOID, count(*) AS ENVIOS
-Where=E1Z141Q2 = '20260306'
-
+Where=TM45A IN ('T','E') AND E1Z141Q2 >= '20251201' AND E1Z141Q2 <= '20260309'
 [Options]
 DateFmt=ISO
 DateSep=[/]
@@ -39,7 +35,6 @@ SortSeq=0
 SortTable=
 TimeFmt=HMS
 TimeSep=[:]
-
 [HTML]
 AutoSize=0
 AutoSizeKB=128
@@ -94,7 +89,6 @@ EnableNumberOfColumns=0
 EnableNumberOfRows=0
 EnableTableWidth=0
 IncludeColumnNames=1
-
 [Properties]
 AutoClose=0
 AutoRun=0
@@ -110,7 +104,5 @@ UserOption=2
 DisplayLongSchemaNames=1
 DisplayLongTableNames=1
 DisplayLongColumnNames=1
-
 [LibraryList]
 Lib1=B DCDNSOCIOS
-

@@ -39,7 +39,7 @@ if __name__ == '__main__':
         filetransfer="SMS_AGR_NOTIF.dtfx",
         configsection="SQL",
         configkey="Where",
-        configvalue=f"TRIM(S1XX84W) NO INT ('0','0000000000') AND S1Z141Q2 = '{today_asformat}'"
+        configvalue=f"TRIM(S1XX84W) NOT IN ('0','0000000000') AND S1Z141Q2 = '{today_asformat}'"
     )
     rad.acsbundle_download()
     ## Otros Payclub, cna

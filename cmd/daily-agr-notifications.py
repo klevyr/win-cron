@@ -60,7 +60,7 @@ if __name__ == '__main__':
         filetransfer="SMS_AGR_NOTIF.dtfx",
         configsection="SQL",
         configkey="Where",
-        configvalue=f"TRIM(S1XX84W) NO INT ('0','0000000000') AND S1Z141Q2 >= '{inidate}' AND S1Z141Q2 <= '{enddate}'"
+        configvalue=f"TRIM(S1XX84W) NOT IN ('0','0000000000') AND S1Z141Q2 >= '{inidate}' AND S1Z141Q2 <= '{enddate}'"
     )
     rad.acsbundle_download()
     # init uploads
