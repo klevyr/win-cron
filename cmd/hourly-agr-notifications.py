@@ -58,19 +58,19 @@ if __name__ == '__main__':
     df['Origen'] = src_transfer
     rad.runSqlQuery(f"DELETE FROM `mon_notif_email_sms` WHERE Fecha = '{today_dtformat}' AND Origen = '{src_transfer}'")
     df.to_sql(name='mon_notif_email_sms', con=rad.getMSqlEngine(), if_exists='append', index=False)
-    rad.log.info("> SMS, done.")
+    rad.log.info(f"> SMS, {df.shape} done.")
     # EMAIL
     df = pd.read_csv(f"{rad.defaultOutputData}/mail_agr_notifications.csv",
                      encoding="ISO-8859-1",
                      names=transfer_columns,
                      dtype=str
                      )
-    df['TipoCola'] = 'POSTFIX'
+    df['TipoCola'] = 'EMAIL'
     src_transfer = "LOG_EMAIL"
     df['Origen'] = src_transfer
     rad.runSqlQuery(f"DELETE FROM `mon_notif_email_sms` WHERE Fecha = '{today_dtformat}' AND Origen = '{src_transfer}'")
     df.to_sql(name='mon_notif_email_sms', con=rad.getMSqlEngine(), if_exists='append', index=False)
-    rad.log.info("> EMAIL, done.")
+    rad.log.info(f"> EMAIL, {df.shape} done.")
     # CNACLIP
     df = pd.read_csv(f"{rad.defaultOutputData}/cnaclip-daily.csv",
                      encoding="ISO-8859-1",
@@ -79,7 +79,7 @@ if __name__ == '__main__':
                      )
     rad.runSqlQuery(f"TRUNCATE TABLE `cna_cnaclip`")
     df.to_sql(name='cna_cnaclip', con=rad.getMSqlEngine(), if_exists='append', index=False)
-    rad.log.info("> CNACLIP, done.")
+    rad.log.info(f"> CNACLIP, {df.shape} done.")
     # CNAPUAP
     df = pd.read_csv(f"{rad.defaultOutputData}/cnapuap-daily.csv",
                      encoding="ISO-8859-1",
@@ -89,7 +89,7 @@ if __name__ == '__main__':
                      )
     rad.runSqlQuery(f"TRUNCATE TABLE `cna_cnapuap`")
     df.to_sql(name='cna_cnapuap', con=rad.getMSqlEngine(), if_exists='append', index=False)
-    rad.log.info("> CNAPUAP, done.")
+    rad.log.info(f"> CNAPUAP, {df.shape} done.")
 
     rad.log.info("*** end sync")
     files_remove = [

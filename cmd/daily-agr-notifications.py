@@ -76,19 +76,19 @@ if __name__ == '__main__':
     df['Origen'] = src_transfer
     rad.runSqlQuery(f"DELETE FROM `mon_notif_email_sms` WHERE Fecha BETWEEN '{sms_start}' AND '{sms_end}' AND Origen = '{src_transfer}'")
     df.to_sql(name='mon_notif_email_sms', con=rad.getMSqlEngine(), if_exists='append', index=False)
-    rad.log.info("> SMS, done.")
+    rad.log.info(f"> SMS, {df.shape} done.")
     # EMAIL
     df = pd.read_csv(f"{rad.defaultOutputData}/mail_agr_notifications.csv",
                      encoding="ISO-8859-1",
                      names=transfer_columns,
                      dtype=str
                      )
-    df['TipoCola'] = 'POSTFIX'
+    df['TipoCola'] = 'EMAIL'
     src_transfer = "LOG_EMAIL"
     df['Origen'] = src_transfer
     rad.runSqlQuery(f"DELETE FROM `mon_notif_email_sms` WHERE Fecha BETWEEN '{mail_start}' AND '{mail_end}' AND Origen = '{src_transfer}'")
     df.to_sql(name='mon_notif_email_sms', con=rad.getMSqlEngine(), if_exists='append', index=False)
-    rad.log.info("> EMAIL, done.")
+    rad.log.info(f"> EMAIL, {df.shape} done.")
 
     files_remove = [
         f"{rad.defaultOutputData}/sms_agr_notifications.csv",
