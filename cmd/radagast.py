@@ -4,10 +4,12 @@
 import atexit, configparser, logging
 import os, sys, smtplib
 import sqlalchemy as sqa
+
 from datetime import date, datetime, timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from subprocess import Popen, PIPE
+from pathlib import Path
 
 
 class Radagast:
@@ -20,9 +22,10 @@ class Radagast:
 
     def __init__(self):
         root = ""
-        if sys.platform == 'win32':
-            root = str(__file__)[:2]
-        self.maindir = f"{root}/bin/cron" # fixme: import from config.json
+        if sys.platform == "win32":
+            root = Path(str(__file__))
+        print("ROOT_DIR", root.parent.parent)
+        self.maindir = root.parent.parent
         self.us_transfer = ""
         self.pw_transfer = ""
         self.pw_windows = ""
@@ -34,11 +37,11 @@ class Radagast:
         self.senderAccount = ""
         self.log = logging.getLogger()
         self.lockfile = ""
-        self.transferfolder = f"{self.maindir}/cmd/transfer/" # fixme: import from config.json
+        self.transferfolder = self.maindir / "cmd" / "transfer"
         self.currentTransferFile = ""
-        self.configfil = f"{self.maindir}/config.ini" # fixme: import from config.json
-        self.logpath = f"{self.maindir}/cmd/logs/" # fixme: import from config.json
-        self.defaultOutputData = "D:/com/share" # fixme: import from config.json
+        self.configfil = self.maindir / "config.ini"
+        self.logpath = self.maindir / "cmd" / "logs"
+        self.defaultOutputData = "D:/com/share"
         atexit.register(self.cleanup)
 
     def getDateRange_LastMonth(self):
@@ -100,7 +103,9 @@ class Radagast:
         if (max_date + timedelta(days=1)) > ld_incremental:
             fd_incremental = ld_incremental
         else:
-            fd_incremental = max_date if max_date.day == 1 else max_date + timedelta(days=1)
+            fd_incremental = (
+                max_date if max_date.day == 1 else max_date + timedelta(days=1)
+            )
         return fd_incremental, ld_incremental
 
     def set_logger(self, filelog):
@@ -109,25 +114,27 @@ class Radagast:
         en pantalla en caso de ejecutarlo via linea de comandos
         y genera un archivo lock para controlar procesos duplicados.
         """
-        scriptname = os.path.splitext(os.path.basename(filelog))[0]
-        self.lockfile = self.logpath + scriptname + ".lock"
+        scriptname = Path(filelog)
+        self.lockfile = self.logpath / f"{scriptname.name}.lock"
         # Custom
-        self.log = logging.getLogger(scriptname)
+        self.log = logging.getLogger(scriptname.name)
         self.log.setLevel(logging.INFO)
         # Console Handler
         c_handler = logging.StreamHandler(stream=sys.stdout)
-        c_format = logging.Formatter('%(asctime)s %(message)s',
-                                     datefmt='%Y-%m-%d %H:%M:%S')
+        c_format = logging.Formatter(
+            "%(asctime)s %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+        )
         c_handler.setLevel(logging.INFO)
         c_handler.setFormatter(c_format)
         # FileHandler
-        c_logfile = self.logpath + scriptname + '.log'
+        c_logfile = self.logpath / f"{scriptname.name}.log"
         if not os.path.exists(c_logfile):
-            with open(c_logfile, 'w'): pass
+            with open(c_logfile, "w"):
+                pass
         f_handler = logging.FileHandler(c_logfile)
         f_format = logging.Formatter(
-            '%(asctime)s %(levelname)-8s %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S')
+            "%(asctime)s %(levelname)-8s %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+        )
         f_handler.setLevel(logging.INFO)
         f_handler.setFormatter(f_format)
         # Logger
@@ -143,7 +150,7 @@ class Radagast:
         - no existir, continuar la ejecucion y coloa el PID en el archivo
         """
         try:
-            with open(self.lockfile, 'x') as lockfile:
+            with open(self.lockfile, "x") as lockfile:
                 # create lock file by prevent many process running
                 lockfile.write(str(os.getpid()))
                 self.log.info("init script with PID {}".format(os.getpid()))
@@ -151,15 +158,13 @@ class Radagast:
             # file already exists
             processid = ""
             try:
-                with open(self.lockfile, 'r') as lckfil:
+                with open(self.lockfile, "r") as lckfil:
                     processid = lckfil.read()
             except IOError:
                 pass
-            self.log.warning(
-                "already running by PID {}...  Pass!".format(processid)
-            )
+            self.log.warning("already running by PID {}...  Pass!".format(processid))
             exit()
-    
+
     def cleanup(self):
         """
         Elimina el archivo .lock cuando haya finalizado el proceso
@@ -168,12 +173,11 @@ class Radagast:
         try:
             os.remove(self.lockfile)
             self.log.info("clean ok.")
-        except PermissionError:
-            self.log.error("Permission denied")
-        except :
+        except PermissionError as pe:
+            self.log.error(pe)
+        except:
             self.log.error("File can not be removed")
         self.log.info("*** END ***")
-
 
     def load_config(self):
         """
@@ -198,25 +202,24 @@ class Radagast:
             config_dict[param] = value
         self.us_transfer = config_dict["transfers_us"]
         self.pw_transfer = config_dict["transfers_pw"]
-        self.pw_windows  = config_dict["ldap_pw"]
+        self.pw_windows = config_dict["ldap_pw"]
         self.exchangeServer = config_dict["mail_server"]
         self.senderAcount = config_dict["mail_sendername"]
 
-    def set_config_transfer(self, filetransfer, configsection,
-                            configkey, configvalue):
+    def set_config_transfer(self, filetransfer, configsection, configkey, configvalue):
         """
         Lee los archivos de transferencis AS400 y modifica los
         parametros especificados
         """
         config = configparser.ConfigParser()
-        config.optionxform = str # type: ignore
+        config.optionxform = str  # type: ignore
         self.set_current_transfer_filename(filetransfer)
         config.read(self.currentTransferFile)
-        self.log.info("Change in section %s[%s]:%s" %
-                      (configsection, configkey, configvalue)
-                      )
+        self.log.info(
+            "Change in section %s[%s]:%s" % (configsection, configkey, configvalue)
+        )
         config.set(configsection, configkey, configvalue)
-        with open(self.currentTransferFile, 'w') as cfgfile:
+        with open(self.currentTransferFile, "w") as cfgfile:
             config.write(cfgfile, False)
 
     def set_current_transfer_filename(self, filetransfer):
@@ -232,32 +235,34 @@ class Radagast:
         """
         Utiliza el programa `RXFERPCB` para realizar las tranferencias del
         gestor
-        
+
         1. Ir al directorio donde se encuentra JAVA  (acsbundle.jar) (C:/Users/Public/IBM/ClientSolutions)
-        2.  Logueo al AS400 
+        2.  Logueo al AS400
         `java -jar acsbundle.jar /plugin=logon /system=AS400F35 /userid=usuario_AS /password=clave_AS /gui=0`
-        # Descarga de Transferencia 
+        # Descarga de Transferencia
         3. java -jar acsbundle.jar /plugin=download /system=AS400F35 ruta/nombre_del_icono.dtfx
-        # borrar cache que pida no solicite contraseña por cuestiones de seguridad 
+        # borrar cache que pida no solicite contraseña por cuestiones de seguridad
         java -jar acsbundle.jar /plugin=logon /system=AS400F35 /c /gui=0
- 
+
         """
         self.log.info("* Transfering " + filename + "...")
-        p = Popen([
-            "rxferpcb",
-            self.transferfolder + filename + ".dtf",
-            self.us_transfer,
-            self.pw_transfer],
+        p = Popen(
+            [
+                "rxferpcb",
+                self.transferfolder + filename + ".dtf",
+                self.us_transfer,
+                self.pw_transfer,
+            ],
             stdin=PIPE,
             stdout=PIPE,
-            stderr=PIPE
+            stderr=PIPE,
         )
         output, err = p.communicate()
         if err:
             self.log.error(err)
         transfer_keywords = ["TIEMPO", "FILAS "]
         lines = 0
-        for line in output.decode('ISO8859-1').split('\r\n'):
+        for line in output.decode("ISO8859-1").split("\r\n"):
             lines += 1
             if line.strip()[:6].upper() in transfer_keywords:
                 self.log.info(line.strip())
@@ -268,50 +273,81 @@ class Radagast:
         Inicializa la nueva version de transferencia utilizando el programa `acsbundle.jar`
         para realizar las tranferencias del gestor.
         """
-        proc = Popen(["java", "-jar", f"{self.maindir}/cmd/acsbundle.jar", "/plugin=logon", "/system=AS400F35",
-                    f"/userid={self.us_transfer}", f"/password={self.pw_transfer}",
-                    "/gui=0"], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        proc = Popen(
+            [
+                "java",
+                "-jar",
+                f"{self.maindir}/cmd/acsbundle.jar",
+                "/plugin=logon",
+                "/system=AS400F35",
+                f"/userid={self.us_transfer}",
+                f"/password={self.pw_transfer}",
+                "/gui=0",
+            ],
+            stdin=PIPE,
+            stdout=PIPE,
+            stderr=PIPE,
+        )
         output, err = proc.communicate()
         if err:
             self.log.error(f"{err.decode('utf-8')} in {os.path.realpath(__file__)}")
-        for line in output.decode('ISO8859-1').split('\r\n'):
+        for line in output.decode("ISO8859-1").split("\r\n"):
             self.log.info(line)
 
     def acsbundle_upload(self):
         """
         Realiza la carga de archivos al as400.
         """
-        proc = Popen(["java", "-jar", f"{self.maindir}/cmd/acsbundle.jar", "/plugin=upload",
-                      self.currentTransferFile, f"/userid={self.us_transfer}"],
-                      stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        proc = Popen(
+            [
+                "java",
+                "-jar",
+                f"{self.maindir}/cmd/acsbundle.jar",
+                "/plugin=upload",
+                self.currentTransferFile,
+                f"/userid={self.us_transfer}",
+            ],
+            stdin=PIPE,
+            stdout=PIPE,
+            stderr=PIPE,
+        )
         output, err = proc.communicate()
         if err:
             self.log.error(err)
-        for line in output.decode('ISO8859-1').split('\n'):
+        for line in output.decode("ISO8859-1").split("\n"):
             if line.strip()[:6].upper() == "FILAS ":
-                rows = line.strip().split(':')[1].strip()
+                rows = line.strip().split(":")[1].strip()
                 self.log.info(f"> {rows} rows uploaded")
-
 
     def acsbundle_download(self):
         """
         Realiza la descarga de archivos del as400.
         """
-        proc = Popen(["java", "-jar", f"{self.maindir}/cmd/acsbundle.jar", "/plugin=download",
-                      "/system=AS400F35", f"/userid={self.us_transfer}", self.currentTransferFile],
-                      stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        proc = Popen(
+            [
+                "java",
+                "-jar",
+                f"{self.maindir}/cmd/acsbundle.jar",
+                "/plugin=download",
+                "/system=AS400F35",
+                f"/userid={self.us_transfer}",
+                self.currentTransferFile,
+            ],
+            stdin=PIPE,
+            stdout=PIPE,
+            stderr=PIPE,
+        )
         output, err = proc.communicate()
         if err:
             self.log.error(err)
-        for line in output.decode('ISO8859-1').split('\n'):
+        for line in output.decode("ISO8859-1").split("\n"):
             if line.strip()[:6].upper() == "FILAS ":
-                rows = line.strip().split(':')[1].strip()
+                rows = line.strip().split(":")[1].strip()
                 self.log.info(f"> {rows} rows downloaded")
 
-
-    def clean_transfer_data(self, filelist, clean_mode='truncate'):
+    def clean_transfer_data(self, filelist, clean_mode="truncate"):
         """
-        Elimina la informacion transferida una vez cargado al gestor 
+        Elimina la informacion transferida una vez cargado al gestor
         de base de datos, bajo dos metodos:
 
          - `truncate` sobreescribe el archivo dejando en blanco (defecto)
@@ -321,15 +357,14 @@ class Radagast:
         if type(filelist) is list:
             for fl in filelist:
                 self.log.info(f"- {fl}")
-                if clean_mode == 'unlink':
+                if clean_mode == "unlink":
                     os.unlink(fl)
-                elif clean_mode == 'truncate':
-                    with open(fl, 'w') as filwriter:
+                elif clean_mode == "truncate":
+                    with open(fl, "w") as filwriter:
                         filwriter.write("")
 
         else:
             self.log.warning("filelist is not list.")
-
 
     def readSqlTemplate(self, sqltemplate):
         """
@@ -338,10 +373,9 @@ class Radagast:
         dir_path = os.path.dirname(os.path.realpath(__file__))
         sqltemplatefile = os.path.join(dir_path, "scripts", sqltemplate)
         sqlbuffer = ""
-        with open(sqltemplatefile, 'r', encoding="utf-8") as reader:
+        with open(sqltemplatefile, "r", encoding="utf-8") as reader:
             sqlbuffer = reader.read()
         return sqlbuffer
-
 
     def saveParsedSqlTemplate(self, sqlparsedtemplate, sqlfilename):
         """
@@ -349,9 +383,8 @@ class Radagast:
         """
         dir_path = os.path.dirname(os.path.realpath(__file__))
         newsqlfile = os.path.join(dir_path, "scripts", sqlfilename)
-        with open(newsqlfile, 'w', encoding="utf-8") as writer:
+        with open(newsqlfile, "w", encoding="utf-8") as writer:
             writer.write(sqlparsedtemplate)
-
 
     def run_mysql(self, sqlfilename):
         """
@@ -359,34 +392,33 @@ class Radagast:
         """
         dir_path = os.path.dirname(os.path.realpath(__file__))
         sqlfile = os.path.join(dir_path, "scripts", sqlfilename)
-        mysql_cmd_line = (
-            "mysql -v -v -u{} -p{} {} < {}".format(
-                self.mysql_user,
-                self.mysql_passwd,
-                self.mysql_db,
-                sqlfile
-            )
+        mysql_cmd_line = "mysql -v -v -u{} -p{} {} < {}".format(
+            self.mysql_user, self.mysql_passwd, self.mysql_db, sqlfile
         )
         self.log.info("processing file %s." % sqlfile)
         process = Popen(
-            mysql_cmd_line,
-            stdout=PIPE,
-            stdin=PIPE,
-            stderr=PIPE,
-            shell=True
+            mysql_cmd_line, stdout=PIPE, stdin=PIPE, stderr=PIPE, shell=True
         )
         output, err = process.communicate()
         sql_keywords = [
-            "ALTER T", "CREATE ", "INSERT ",
-            "LOAD DA", "PREPARE", "QUERY O",
-            "SELECT ", "TRUNCAT", "UPDATE ",
-            "DROP TA", "EXECUTE", "DROP PR",
-            "SET @SQ"
+            "ALTER T",
+            "CREATE ",
+            "INSERT ",
+            "LOAD DA",
+            "PREPARE",
+            "QUERY O",
+            "SELECT ",
+            "TRUNCAT",
+            "UPDATE ",
+            "DROP TA",
+            "EXECUTE",
+            "DROP PR",
+            "SET @SQ",
         ]
         if err:
             self.log.error(err)
         lines = 0
-        for line in output.decode('ISO8859-1').split('\r\n'):
+        for line in output.decode("ISO8859-1").split("\r\n"):
             lines += 1
             if line[:7].upper() in sql_keywords:
                 self.log.info(line.strip())
@@ -397,11 +429,11 @@ class Radagast:
         """
         msg = MIMEMultipart()
         # Header
-        msg['From'] = self.senderAccount
-        msg['To'] = ','.join(rcpts)
-        msg['Subject'] = subject
+        msg["From"] = self.senderAccount
+        msg["To"] = ",".join(rcpts)
+        msg["Subject"] = subject
         # Body
-        msg.attach(MIMEText(htmlbody, 'html'))
+        msg.attach(MIMEText(htmlbody, "html"))
         # Send Email
         server = smtplib.SMTP(self.exchangeServer)
         server.ehlo()

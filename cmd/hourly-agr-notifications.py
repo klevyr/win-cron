@@ -56,7 +56,8 @@ if __name__ == '__main__':
     df['TipoCola'] = df['Cola'].map(getTextQueueType)
     src_transfer = "LOG_SMS"
     df['Origen'] = src_transfer
-    rad.runSqlQuery(f"DELETE FROM `mon_notif_email_sms` WHERE Fecha = '{today_dtformat}' AND Origen = '{src_transfer}'")
+    rad.runSqlQuery(f"DELETE FROM `mon_notif_email_sms` WHERE Fecha = '{today_dtformat}'\
+                     AND Origen = '{src_transfer}'")
     df.to_sql(name='mon_notif_email_sms', con=rad.getMSqlEngine(), if_exists='append', index=False)
     rad.log.info(f"> SMS, {df.shape} done.")
     # EMAIL
@@ -68,7 +69,8 @@ if __name__ == '__main__':
     df['TipoCola'] = 'EMAIL'
     src_transfer = "LOG_EMAIL"
     df['Origen'] = src_transfer
-    rad.runSqlQuery(f"DELETE FROM `mon_notif_email_sms` WHERE Fecha = '{today_dtformat}' AND Origen = '{src_transfer}'")
+    rad.runSqlQuery(f"DELETE FROM `mon_notif_email_sms` WHERE Fecha = '{today_dtformat}'\
+                     AND Origen = '{src_transfer}'")
     df.to_sql(name='mon_notif_email_sms', con=rad.getMSqlEngine(), if_exists='append', index=False)
     rad.log.info(f"> EMAIL, {df.shape} done.")
     # CNACLIP
