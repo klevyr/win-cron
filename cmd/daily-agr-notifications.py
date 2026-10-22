@@ -31,10 +31,10 @@ def getTextQueueType(col):
 if __name__ == "__main__":
     rad = Radagast()
     rad.set_logger(__file__ + ".log")
-    rad.log.info("***** NEW *****")
+    rad.log.info("====== NEW ======")
     # init transfers
     rad.load_config()
-    rad.log.info("* init transfer config")
+    rad.log.info("> init transfer config")
     rad.acsbundle_init()
     # EMAIL NOTIFICATIONS
     lastUpdate = rad.runSqlQuery("""
@@ -46,24 +46,27 @@ if __name__ == "__main__":
     inidate = inidt.strftime("%Y%m%d")
     enddate = enddt.strftime("%Y%m%d")
     sms_start, sms_end = inidate, enddate
-    rad.log.info("* config EMAIL transfers")
-    rad.log.info(f" > range `{inidate}` @ `{enddate}`")
+    rad.log.info("> config EMAIL transfers")
     if inidate == enddate:
+        rad.log.info(f">> date `%s`", inidate)
         rad.set_config_transfer(
             filetransfer="EMAIL_AGR_NOTIF.dtfx",
             configsection="SQL",
             configkey="Where",
-            configvalue=f"TM45A IN ('T','E') AND E1Z141Q2 = '{inidate}",
+            configvalue=f"TM45A IN ('T','E') AND E1Z141Q2 = '{inidate}'",
         )
     else:
+        rad.log.info(f">> range `%s` @ `%s`", inidate, enddate)
         rad.set_config_transfer(
             filetransfer="EMAIL_AGR_NOTIF.dtfx",
             configsection="SQL",
             configkey="Where",
-            configvalue=f"TM45A IN ('T','E') AND E1Z141Q2 >= '{inidate}'\
-                 AND E1Z141Q2 <= '{enddate}'",
+            configvalue=(
+                f"TM45A IN ('T','E') AND E1Z141Q2 >= '{inidate}' AND E1Z141Q2 <= '{enddate}'"
+            ),
         )
     rad.acsbundle_download()
+    rad.log.info("> Finish download")
     # SMS NOTIFICATIONS
     lastUpdate = rad.runSqlQuery("""
         SELECT IFNULL(MAX(Fecha), 
@@ -75,37 +78,41 @@ if __name__ == "__main__":
     inidate = inidt.strftime("%Y%m%d")
     enddate = enddt.strftime("%Y%m%d")
     mail_start, mail_end = inidate, enddate
-    rad.log.info("* config SMS transfers")
-    rad.log.info(f" > range `{inidate}` @ `{enddate}`")
+    rad.log.info("> config SMS transfers")
     if inidate == enddate:
+        rad.log.info(f">> date `%s`", inidate)
         rad.set_config_transfer(
             filetransfer="SMS_AGR_NOTIF.dtfx",
             configsection="SQL",
             configkey="Where",
-            configvalue=f"TRIM(S1XX84W) NOT IN ('0','0000000000') \
-                AND S1Z141Q2 = '{inidate}'",
+            configvalue=(
+                f"TRIM(S1XX84W) NOT IN ('0','0000000000') AND S1Z141Q2 = '{inidate}'"
+            ),
         )
     else:
+        rad.log.info(f">> date `%s` @ `%s`", inidate, enddate)
         rad.set_config_transfer(
             filetransfer="SMS_AGR_NOTIF.dtfx",
             configsection="SQL",
             configkey="Where",
-            configvalue=f"TRIM(S1XX84W) NOT IN ('0','0000000000') \
-                AND S1Z141Q2 >= '{inidate}' AND S1Z141Q2 <= '{enddate}'",
+            configvalue=(f"TRIM(S1XX84W) NOT IN ('0','0000000000') \
+AND S1Z141Q2 >= '{inidate}' AND S1Z141Q2 <= '{enddate}'"),
         )
     rad.acsbundle_download()
+    rad.log.info("> Finish download")
     # init uploads
+    rad.log.info("> init upload db")
     # SMS
-    rad.log.info("* init DTL")
     df = pd.read_csv(
         f"{rad.defaultOutputData}/sms_agr_notifications.csv",
-        encoding="ISO-8859-1",
+        encoding="UTF-8",
         names=transfer_columns,
         dtype=str,
     )
     df["TipoCola"] = df["Cola"].map(getTextQueueType)
     src_transfer = "LOG_SMS"
     df["Origen"] = src_transfer
+    rad.log.info("> clean %s data", src_transfer)
     if sms_start == sms_end:
         rad.runSqlQuery(f"DELETE FROM `mon_notif_email_sms` \
                 WHERE Fecha = '{sms_start}' \
@@ -114,24 +121,25 @@ if __name__ == "__main__":
         rad.runSqlQuery(f"DELETE FROM `mon_notif_email_sms` \
                 WHERE Fecha BETWEEN '{sms_start}' AND '{sms_end}' \
                     AND Origen = '{src_transfer}'")
+    rad.log.info("> uploading")
     df.to_sql(
         name="mon_notif_email_sms",
         con=rad.getMSqlEngine(),
         if_exists="append",
         index=False,
     )
-    rad.log.info(f"> SMS, {df.shape} done.")
+    rad.log.info(f"> SMS, %s done.", df.shape[0])
     # EMAIL
     df = pd.read_csv(
         f"{rad.defaultOutputData}/mail_agr_notifications.csv",
-        encoding="ISO-8859-1",
+        encoding="UTF-8",
         names=transfer_columns,
         dtype=str,
     )
     df["TipoCola"] = "EMAIL"
     src_transfer = "LOG_EMAIL"
     df["Origen"] = src_transfer
-
+    rad.log.info("> clean %s data", src_transfer)
     if mail_start == mail_end:
         rad.runSqlQuery(f"DELETE FROM `mon_notif_email_sms` \
                 WHERE Fecha = '{mail_start}' \
@@ -140,6 +148,7 @@ if __name__ == "__main__":
         rad.runSqlQuery(f"DELETE FROM `mon_notif_email_sms` \
                 WHERE Fecha BETWEEN '{mail_start}' AND '{mail_end}' \
                     AND Origen = '{src_transfer}'")
+    rad.log.info("> uploading")
     df.to_sql(
         name="mon_notif_email_sms",
         con=rad.getMSqlEngine(),
@@ -152,5 +161,6 @@ if __name__ == "__main__":
         f"{rad.defaultOutputData}/sms_agr_notifications.csv",
         f"{rad.defaultOutputData}/mail_agr_notifications.csv",
     ]
-    rad.clean_transfer_data(files_remove)
-    rad.log.info("*** end")
+
+    # rad.clean_transfer_data(files_remove)
+    rad.log.info("===> end")

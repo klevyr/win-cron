@@ -10,6 +10,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from subprocess import Popen, PIPE
 from pathlib import Path
+from dotenv import dotenv_values
 
 
 class Radagast:
@@ -28,13 +29,10 @@ class Radagast:
         self.maindir = root.parent.parent
         self.us_transfer = ""
         self.pw_transfer = ""
-        self.pw_windows = ""
         self.mysql_user = ""
         self.mysql_passwd = ""
         self.mysql_host = ""
         self.mysql_db = ""
-        self.exchangeServer = ""
-        self.senderAccount = ""
         self.log = logging.getLogger()
         self.lockfile = ""
         self.transferfolder = self.maindir / "cmd" / "transfer"
@@ -177,7 +175,7 @@ class Radagast:
             self.log.error(pe)
         except:
             self.log.error("File can not be removed")
-        self.log.info("*** END ***")
+        self.log.info("==> unlocked process")
 
     def load_config(self):
         """
@@ -192,19 +190,8 @@ class Radagast:
         self.mysql_host = config["mysql"]["host"]
         self.mysql_db = config["mysql"]["database"]
         # Configuracion DB
-        engine = self.getMSqlEngine()
-        with engine.connect() as conn:
-            rs = conn.execute(sqa.text("""SELECT param, txtvalue FROM `capp_cfg`
-                WHERE param IN ('transfers_pw','transfers_us','ldap_pw',
-                'mail_server','mail_sendername')""")).fetchall()
-        config_dict = {}
-        for param, value in rs:
-            config_dict[param] = value
-        self.us_transfer = config_dict["transfers_us"]
-        self.pw_transfer = config_dict["transfers_pw"]
-        self.pw_windows = config_dict["ldap_pw"]
-        self.exchangeServer = config_dict["mail_server"]
-        self.senderAcount = config_dict["mail_sendername"]
+        self.us_transfer = self._env("py_transfers_u", required=True)
+        self.pw_transfer = self._env("py_transfers_p", required=True)
 
     def set_config_transfer(self, filetransfer, configsection, configkey, configvalue):
         """
@@ -228,21 +215,22 @@ class Radagast:
         parametros especificados
         """
         self.log.info("> Init transfer file: `%s`" % (filetransfer))
-        self.currentTransferFile = self.transferfolder + filetransfer
+        self.currentTransferFile = self.transferfolder / filetransfer
         return self
 
     def transfer_data(self, filename):
         """
         Utiliza el programa `RXFERPCB` para realizar las tranferencias del
-        gestor
+        gestor, @2025 ahora utiliza `acsbundle.jar`
 
-        1. Ir al directorio donde se encuentra JAVA  (acsbundle.jar) (C:/Users/Public/IBM/ClientSolutions)
-        2.  Logueo al AS400
-        `java -jar acsbundle.jar /plugin=logon /system=AS400F35 /userid=usuario_AS /password=clave_AS /gui=0`
-        # Descarga de Transferencia
-        3. java -jar acsbundle.jar /plugin=download /system=AS400F35 ruta/nombre_del_icono.dtfx
-        # borrar cache que pida no solicite contraseña por cuestiones de seguridad
-        java -jar acsbundle.jar /plugin=logon /system=AS400F35 /c /gui=0
+        Comandos:
+        # Login
+        `java -jar acsbundle.jar /plugin=logon /system=AS400F35 \
+            /userid=usuario_AS /password=clave_AS /gui=0`
+        # Descarga
+        `java -jar acsbundle.jar /plugin=download /system=AS400F35 ruta/nombre_del_icono.dtfx`
+        # Borrar Cache
+        `java -jar acsbundle.jar /plugin=logon /system=AS400F35 /c /gui=0`
 
         """
         self.log.info("* Transfering " + filename + "...")
@@ -423,32 +411,17 @@ class Radagast:
             if line[:7].upper() in sql_keywords:
                 self.log.info(line.strip())
 
-    def sendEmailMessage(self, rcpts, subject, htmlbody):
-        """
-        Enviar una notificacion via email sobre un proceso especifico
-        """
-        msg = MIMEMultipart()
-        # Header
-        msg["From"] = self.senderAccount
-        msg["To"] = ",".join(rcpts)
-        msg["Subject"] = subject
-        # Body
-        msg.attach(MIMEText(htmlbody, "html"))
-        # Send Email
-        server = smtplib.SMTP(self.exchangeServer)
-        server.ehlo()
-        server.starttls()
-        server.ehlo()
-        server.login(self.us_transfer, self.pw_windows)
-        server.sendmail(self.senderAccount, rcpts, msg.as_string())
-        server.quit()
-
     def getMSqlEngine(self):
         """
         ___future___
         Devuelve una conexion a MYSQL
         """
-        url = f"mysql+pymysql://{self.mysql_user}:{self.mysql_passwd}@{self.mysql_host}/{self.mysql_db}"
+        url: str = "mysql+pymysql://{user}:{pwd}@{host}/{db}".format(
+            user=self.mysql_user,
+            pwd=self.mysql_passwd,
+            host=self.mysql_host,
+            db=self.mysql_db,
+        )
         return sqa.create_engine(url)
 
     def runSqlQuery(self, sqlscript):
@@ -464,3 +437,12 @@ class Radagast:
             else:
                 dat = conn.execute(sqa.text(sqlscript))
         return dat
+
+    def _env(self, key: str, default: str | None = None, required: bool = False) -> str:
+        """Lee una variable de entorno."""
+        val = os.environ.get(key, default)
+        if required and val is None:
+            raise EnvironmentError(
+                f"Variable de entorno requerida no encontrada: {key}"
+            )
+        return val or ""

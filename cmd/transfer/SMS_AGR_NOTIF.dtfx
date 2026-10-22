@@ -1,9 +1,11 @@
 [DataTransferFrom]
 DataTransferVersion=1.0
+
 [HostInfo]
 Database=*SYSBAS
 HostFile=DVMCOMUN/TMSMT13U
 HostName=AS400F35
+
 [ClientInfo]
 CrtOpt=1
 OutputDevice=2
@@ -14,6 +16,7 @@ TruncateTrailingSpaces=1
 PadNumericFields=0
 FileEncoding=UTF-8
 FDFFile=D:\com\share\sms_agr_notifications.fdfx
+
 [SQL]
 EnableGroup=0
 GroupBy=S1Z141Q2, LEFT(S1Z141Q2, 6), RIGHT(S1Z141Q2, 2), CONCAT(CONCAT(TM26A, TM27A), S1XX858), LEFT(S1XXDZE, 2), CASE WHEN TRIM(S1XX84G) IN ('COLPUSHJOU','COLPUSHSMS') THEN TRIM(S1XX84G) ELSE 'SMSGEN' END, LENGTH(TRIM(S1XX84A)), CASE WHEN TRIM(S1XX84W) LIKE '593%' THEN 'Valid' ELSE 'Invalid' END, CASE WHEN LENGTH(TRIM(S1XX84Y)) = 13 AND RIGHT(TRIM(S1XX84Y), 3) = '001' THEN 'RUC' ELSE 'CID' END
@@ -23,7 +26,8 @@ MissingFields=0
 OrderBy=
 SQLSelect=
 Select=S1Z141Q2 AS FECHA, LEFT(S1Z141Q2, 6) AS MESID, RIGHT(S1Z141Q2, 2) AS DIAID, CONCAT(CONCAT(TM26A, TM27A), S1XX858) AS UID, LEFT(S1XXDZE, 2) AS HORA, CASE WHEN TRIM(S1XX84G) IN ('COLPUSHJOU','COLPUSHSMS') THEN TRIM(S1XX84G) ELSE 'SMSGEN' END AS COLA,LENGTH(TRIM(S1XX84A)) AS RESPONSE, CASE WHEN TRIM(S1XX84W) LIKE '593%' THEN 'Valid' ELSE 'Invalid' END AS VALIDCONT, CASE WHEN LENGTH(TRIM(S1XX84Y)) = 13 AND RIGHT(TRIM(S1XX84Y), 3) = '001' THEN 'RUC' ELSE 'CID' END TIPOID, count(*) AS ENVIOS
-Where=TRIM(S1XX84W) NOT IN ('0','0000000000') AND S1Z141Q2 >= '20260902'
+Where=TRIM(S1XX84W) NOT IN ('0','0000000000') AND S1Z141Q2 = '20261021'
+
 [Options]
 DateFmt=YMD
 DateSep=[/]
@@ -35,6 +39,7 @@ SortSeq=0
 SortTable=
 TimeFmt=HMS
 TimeSep=[:]
+
 [HTML]
 AutoSize=0
 AutoSizeKB=128
@@ -89,6 +94,7 @@ EnableNumberOfColumns=0
 EnableNumberOfRows=0
 EnableTableWidth=0
 IncludeColumnNames=1
+
 [Properties]
 AutoClose=0
 AutoRun=0
@@ -104,3 +110,4 @@ UserOption=0
 DisplayLongSchemaNames=1
 DisplayLongTableNames=1
 DisplayLongColumnNames=1
+
