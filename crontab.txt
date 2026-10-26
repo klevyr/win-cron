@@ -14,4 +14,5 @@
 
 ## Monitoreo
 1 8 * * 0-4 /MIN py D:/com/dev/cron/cmd/daily-agr-notifications.py
-*/25 9-16 * * 0-4 /MIN py D:/com/dev/cron/cmd/hourly-agr-notifications.py
+*/20 9-16 * * 0-4 /MIN py D:/com/dev/cron/cmd/hourly-agr-notifications.py
+10 9,12,15 * * 0-4 /MIN py D:/com/dev/cron/cmd/hourly-dat-cdigital.py

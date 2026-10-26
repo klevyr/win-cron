@@ -101,9 +101,7 @@ class Radagast:
         if (max_date + timedelta(days=1)) > ld_incremental:
             fd_incremental = ld_incremental
         else:
-            fd_incremental = (
-                max_date if max_date.day == 1 else max_date + timedelta(days=1)
-            )
+            fd_incremental = max_date
         return fd_incremental, ld_incremental
 
     def set_logger(self, filelog):
@@ -113,6 +111,7 @@ class Radagast:
         y genera un archivo lock para controlar procesos duplicados.
         """
         scriptname = Path(filelog)
+        print(scriptname)
         self.lockfile = self.logpath / f"{scriptname.name}.lock"
         # Custom
         self.log = logging.getLogger(scriptname.name)
