@@ -30,7 +30,7 @@ def getTextQueueType(col):
 
 if __name__ == "__main__":
     rad = Radagast()
-    rad.set_logger(__file__ + ".log")
+    rad.set_logger(__file__)
     rad.log.info("====== NEW ======")
     today_dtformat = date.today().strftime("%Y-%m-%d")
     today_asformat = date.today().strftime("%Y%m%d")
